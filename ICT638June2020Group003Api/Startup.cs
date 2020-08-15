@@ -29,6 +29,8 @@ namespace ICT638June2020Group003Api
         {
             services.AddDbContext<Agent_Context>(opt =>
                opt.UseInMemoryDatabase("AgentList"));
+            services.AddDbContext<UserContext>(opt =>
+               opt.UseInMemoryDatabase("UserList"));
             services.AddControllers();
         }
 
