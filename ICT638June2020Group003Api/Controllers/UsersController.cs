@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ICT638June2020Group003Api.Models;
+using ICT638June2020Group003Api.NotificationHubs;
+using ICT638June2020Group003Api.Configurations;
+using Microsoft.Azure.NotificationHubs;
 
 namespace ICT638June2020Group003Api.Controllers
 {
@@ -13,10 +16,17 @@ namespace ICT638June2020Group003Api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
+        NotificationHubConfiguration standardNotificationHubConfiguration;
+
         private readonly UserContext _context;
 
         public UsersController(UserContext context)
         {
+            standardNotificationHubConfiguration = new NotificationHubConfiguration();
+            standardNotificationHubConfiguration.ConnectionString = "Endpoint=sb://group3.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=yjTQlHGeyyelb6xS9LoPth+aX9gMWBewz0jCRLMzgnQ=";
+            standardNotificationHubConfiguration.HubName = "Assessment2Group3";
+            _context = context;
+
             _context = context;
         }
 
@@ -81,6 +91,15 @@ namespace ICT638June2020Group003Api.Controllers
         {
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            NotificationHubProxy _notificationHubProxy = new NotificationHubProxy(standardNotificationHubConfiguration);
+            NotificationHubs.Notification newNotification = new NotificationHubs.Notification();
+            newNotification.Content = "New user created: id = " + user.Id;
+            newNotification.Title = "New user";
+            HubResponse<NotificationOutcome> pushDeliveryResult = await _notificationHubProxy.SendNotification(newNotification);
+
+            if (pushDeliveryResult.CompletedWithSuccess)
+                Console.WriteLine("Push Message Succesful");
 
             return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }

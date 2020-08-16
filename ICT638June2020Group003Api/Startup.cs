@@ -12,14 +12,20 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ICT638June2020Group003Api.Models;
 using Microsoft.EntityFrameworkCore;
+using ICT638June2020Group003Api.Configurations;
 
 namespace ICT638June2020Group003Api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+               .SetBasePath(env.ContentRootPath)
+               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+               .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+               .AddEnvironmentVariables();
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -27,10 +33,13 @@ namespace ICT638June2020Group003Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<NotificationHubConfiguration>(Configuration.GetSection("NotificationHub"));
             services.AddDbContext<Agent_Context>(opt =>
                opt.UseInMemoryDatabase("AgentList"));
             services.AddDbContext<UserContext>(opt =>
                opt.UseInMemoryDatabase("UserList"));
+          /*services.AddDbContext<HouseContext>(opt =>
+              opt.UseInMemoryDatabase("HouseList"));*/
             services.AddControllers();
         }
 
